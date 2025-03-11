@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls";
-import { onKeyDown, onKeyUp } from "./eventListeners";
+import { onKeyDown, onKeyUp, onMouseDown, onMouseUp } from "./eventListeners";
 import { updateCameraPosition } from "./camera";
+import { PivotPoint } from "./PivotPoint";
 
 // three.js objects (https://threejs.org/docs/#manual/en/introduction/Creating-a-scene)
 const scene = new THREE.Scene();
@@ -21,6 +22,8 @@ const sphere = new THREE.Mesh(
   new THREE.MeshBasicMaterial({ color: 0xff0000 })
 );
 const pointerLockControls = new PointerLockControls(camera, document.body);
+const pivotParent = new PivotPoint(scene, sphere, camera);
+const raycaster = new THREE.Raycaster();
 
 // state variables
 const state = {
@@ -29,6 +32,10 @@ const state = {
     backward: false,
     left: false,
     right: false,
+  },
+  mouse: {
+    isMouseDown: false,
+    prevIsMouseDown: false,
   },
 };
 
@@ -41,6 +48,8 @@ function setup() {
   document.body.addEventListener("click", (e) => pointerLockControls.lock());
   document.body.addEventListener("keydown", (e) => onKeyDown(e, state));
   document.body.addEventListener("keyup", (e) => onKeyUp(e, state));
+  document.body.addEventListener("mousedown", () => onMouseDown(state));
+  document.body.addEventListener("mouseup", () => onMouseUp(state));
 
   // add objects to the scene
   scene.add(plane);
@@ -53,6 +62,33 @@ function setup() {
 // define the animation loop function which will run ones per frame (typically 60fps)
 function animate() {
   const cameraDir = updateCameraPosition(camera, state);
+  const oneUnitFromCamera = camera.position.clone().add(cameraDir);
+
+  // shoot a ray from the camera to the center of the screen
+  raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+  const intersects = raycaster.intersectObject(sphere);
+
+  // CASE: mousedown
+  if (state.mouse.isMouseDown) {
+    if (intersects.length > 0) {
+      // Only set the pivot point if this is the first frame the mouse is held down
+      if (!state.mouse.prevIsMouseDown) pivotParent.anchor(intersects[0].point);
+    }
+
+    pivotParent.setPos(oneUnitFromCamera);
+    document.getElementById("crosshair").style.borderColor = "blue";
+  }
+
+  // CASE: mouseup
+  else if (!state.mouse.isMouseDown) {
+    // let go of ball: detach it from pivotParent (reattaches it to the scene directly)
+    pivotParent.detach();
+
+    document.getElementById("crosshair").style.borderColor = "white";
+  }
+
+  // remember current state to be used in next frame
+  state.mouse.prevIsMouseDown = state.mouse.isMouseDown;
 
   renderer.render(scene, camera);
 }

@@ -31,3 +31,11 @@ export function onKeyUp(event, state) {
       break;
   }
 }
+
+export function onMouseDown(state) {
+  state.mouse.isMouseDown = true;
+}
+
+export function onMouseUp(state) {
+  state.mouse.isMouseDown = false;
+}
