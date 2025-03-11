@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import { PointerLockControls } from "three/addons/controls/PointerLockControls";
+import { onKeyDown, onKeyUp } from "./eventListeners";
+import { updateCameraPosition } from "./camera";
 
 // three.js objects (https://threejs.org/docs/#manual/en/introduction/Creating-a-scene)
 const scene = new THREE.Scene();
@@ -37,6 +39,8 @@ function setup() {
   document.body.appendChild(renderer.domElement);
 
   document.body.addEventListener("click", (e) => pointerLockControls.lock());
+  document.body.addEventListener("keydown", (e) => onKeyDown(e, state));
+  document.body.addEventListener("keyup", (e) => onKeyUp(e, state));
 
   // add objects to the scene
   scene.add(plane);
@@ -48,6 +52,8 @@ function setup() {
 
 // define the animation loop function which will run ones per frame (typically 60fps)
 function animate() {
+  const cameraDir = updateCameraPosition(camera, state);
+
   renderer.render(scene, camera);
 }
 
