@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { PointerLockControls } from "three/addons/controls/PointerLockControls";
 
 // three.js objects (https://threejs.org/docs/#manual/en/introduction/Creating-a-scene)
 const scene = new THREE.Scene();
@@ -17,12 +18,15 @@ const sphere = new THREE.Mesh(
   new THREE.SphereGeometry(1),
   new THREE.MeshBasicMaterial({ color: 0xff0000 })
 );
+const pointerLockControls = new PointerLockControls(camera, document.body);
 
 // setup function: we call this function only once at the beginning of the program to setup the scene
 function setup() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 
   document.body.appendChild(renderer.domElement);
+
+  document.body.addEventListener("click", (e) => pointerLockControls.lock());
 
   // add objects to the scene
   scene.add(plane);
