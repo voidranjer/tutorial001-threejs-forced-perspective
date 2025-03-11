@@ -20,6 +20,16 @@ const sphere = new THREE.Mesh(
 );
 const pointerLockControls = new PointerLockControls(camera, document.body);
 
+// state variables
+const state = {
+  keyboard: {
+    forward: false,
+    backward: false,
+    left: false,
+    right: false,
+  },
+};
+
 // setup function: we call this function only once at the beginning of the program to setup the scene
 function setup() {
   renderer.setSize(window.innerWidth, window.innerHeight);
