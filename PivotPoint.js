@@ -8,6 +8,10 @@ export class PivotPoint {
 
     this.obj = new THREE.Object3D();
     scene.add(this.obj);
+
+    // Rotation
+    this.capturedObjQuaternion = new THREE.Quaternion();
+    this.capturedCameraQuaternion = new THREE.Quaternion();
   }
 
   detach() {
@@ -36,6 +40,12 @@ export class PivotPoint {
      * Any future movement of the pivotParent will now affect the object as well.
      */
     this.obj.attach(this.targetObj);
+
+    /**
+     * Capture the current rotations.
+     */
+    this.capturedObjQuaternion.copy(this.obj.quaternion);
+    this.capturedCameraQuaternion.copy(this.camera.quaternion);
   }
 
   setPos(to) {
@@ -46,5 +56,17 @@ export class PivotPoint {
      * but instead move 5 units backwards relative from its current position.
      */
     this.obj.position.copy(to);
+
+    /**
+     * Rotate the object by as much as the camera has rotated since the pivotParent was anchored.
+     * Check out https://jamesyap.org/home/tutorials/superliminal#4-rotation-on-the-object for a comprehensive explanation.
+     * Keep in mind the usage of `.clone()` to prevent modifying the original quaternions.
+     */
+    const rotationTransformation = this.camera.quaternion
+      .clone()
+      .multiply(this.capturedCameraQuaternion.clone().invert());
+    this.obj.quaternion.copy(
+      rotationTransformation.multiply(this.capturedObjQuaternion)
+    );
   }
 }
