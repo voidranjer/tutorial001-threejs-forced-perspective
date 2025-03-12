@@ -12,6 +12,10 @@ export class PivotPoint {
     // Rotation
     this.capturedObjQuaternion = new THREE.Quaternion();
     this.capturedCameraQuaternion = new THREE.Quaternion();
+
+    // Scale
+    this.capturedObjDistance = 1; // arbitrary initial value
+    this.capturedObjScale = new THREE.Vector3(1, 1, 1); // describes the scale of the object in x, y, and z directions
   }
 
   detach() {
@@ -46,6 +50,12 @@ export class PivotPoint {
      */
     this.capturedObjQuaternion.copy(this.obj.quaternion);
     this.capturedCameraQuaternion.copy(this.camera.quaternion);
+
+    /**
+     * Capture the current scale.
+     */
+    this.capturedObjDistance = this.getDistance();
+    this.capturedObjScale.copy(this.obj.scale);
   }
 
   setPos(to) {
@@ -68,5 +78,18 @@ export class PivotPoint {
     this.obj.quaternion.copy(
       rotationTransformation.multiply(this.capturedObjQuaternion)
     );
+
+    /**
+     * Scale the object by the same amount as the camera has moved since the pivotParent was anchored.
+     */
+    const scaleFactor = this.getDistance() / this.capturedObjDistance;
+    this.obj.scale.copy(
+      this.capturedObjScale.clone().multiplyScalar(scaleFactor)
+    );
+  }
+
+  getDistance() {
+    return this.obj.position.distanceTo(this.camera.position);
+    // return this.obj.position.clone().sub(this.camera.position).length(); // same thing but using vector subtraction
   }
 }
