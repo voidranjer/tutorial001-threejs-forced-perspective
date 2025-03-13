@@ -16,13 +16,20 @@ export class PivotPoint {
     // Scale
     this.capturedObjDistance = 1; // arbitrary initial value
     this.capturedObjScale = new THREE.Vector3(1, 1, 1); // describes the scale of the object in x, y, and z directions
+
+    // State
+    this.isAttached = false;
   }
 
   detach() {
+    if (!this.isAttached) return;
+
     /**
      * Attaching an object to another new object in Three.js will detach it from its current parent.
      */
     this.scene.attach(this.targetObj);
+
+    this.isAttached = false;
   }
 
   anchor(from) {
@@ -56,9 +63,13 @@ export class PivotPoint {
      */
     this.capturedObjDistance = this.getDistance();
     this.capturedObjScale.copy(this.obj.scale);
+
+    this.isAttached = true;
   }
 
   setPos(to) {
+    if (!this.isAttached) return;
+
     /**
      * We make changes to the pivotParent's position, and the object will follow along.
      * Example: Moving the pivotParent 5 units backwards will result in the object moving 5 units backwards as well.
