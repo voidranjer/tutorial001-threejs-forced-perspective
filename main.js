@@ -81,8 +81,26 @@ function animate() {
 
   // CASE: mouseup
   else if (!state.mouse.isMouseDown) {
-    // let go of ball: detach it from pivotParent (reattaches it to the scene directly)
-    pivotParent.detach();
+    if (pivotParent.isAttached) {
+      const intersectBg = raycaster.intersectObject(plane);
+      if (intersectBg.length === 1) {
+        // intersection point on the wall
+        const pointOnBg = intersectBg[0].point;
+
+        // shoot a ray from the point on the wall back towards the sphere (reflection)
+        raycaster.set(pointOnBg, cameraDir.negate());
+        const instersectBackside = raycaster.intersectObject(sphere);
+
+        if (instersectBackside.length === 1) {
+          // point on the backside surface of the sphere
+          const pointOnBackside = instersectBackside[0].point;
+
+          pivotParent.anchor(pointOnBackside);
+          pivotParent.setPos(pointOnBg);
+          pivotParent.detach();
+        }
+      }
+    }
 
     document.getElementById("crosshair").style.borderColor = "white";
   }
