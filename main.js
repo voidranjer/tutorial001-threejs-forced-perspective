@@ -37,6 +37,9 @@ const state = {
     isMouseDown: false,
     prevIsMouseDown: false,
   },
+  pullback: {
+    direction: null, // THREE.Vector3() - direction to pull back the ball (away from the wall, towards the position of the camera when the mouse was released)
+  },
 };
 
 // setup function: we call this function only once at the beginning of the program to setup the scene
@@ -68,8 +71,29 @@ function animate() {
   raycaster.setFromCamera({ x: 0, y: 0 }, camera);
   const intersects = raycaster.intersectObject(sphere);
 
+  // CASE: pullback required (mouse actions ignored until stable state is reached)
+  if (state.pullback.direction) {
+    // mess around with this value. the higher the SPEED, the faster the pullback is completed, but the less accurate it will be
+    const SPEED = 0.1;
+
+    pivotParent.setPos(
+      pivotParent.obj.position
+        .clone()
+        .addScaledVector(state.pullback.direction, SPEED),
+      true // ignore camera quaternion changes:- we only want to pull the object backwards, not rotate it with the camera even after letting it go
+    );
+
+    const objBoundingBox = new THREE.Box3().setFromObject(sphere);
+    const bgBoundingBox = new THREE.Box3().setFromObject(plane);
+
+    if (!objBoundingBox.intersectsBox(bgBoundingBox)) {
+      state.pullback.direction = null;
+      pivotParent.detach();
+    }
+  }
+
   // CASE: mousedown
-  if (state.mouse.isMouseDown) {
+  else if (state.mouse.isMouseDown) {
     if (intersects.length > 0) {
       // Only set the pivot point if this is the first frame the mouse is held down
       if (!state.mouse.prevIsMouseDown) pivotParent.anchor(intersects[0].point);
@@ -97,7 +121,12 @@ function animate() {
 
           pivotParent.anchor(pointOnBackside);
           pivotParent.setPos(pointOnBg);
-          pivotParent.detach();
+
+          // compute the direction vector [point on wall --> camera], and normalize (set magnitude to 1, unit vector)
+          state.pullback.direction = camera.position
+            .clone()
+            .sub(pointOnBg)
+            .normalize();
         }
       }
     }

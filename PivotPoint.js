@@ -67,7 +67,7 @@ export class PivotPoint {
     this.isAttached = true;
   }
 
-  setPos(to) {
+  setPos(to, ignoreQuaternion = false) {
     if (!this.isAttached) return;
 
     /**
@@ -83,12 +83,14 @@ export class PivotPoint {
      * Check out https://jamesyap.org/home/tutorials/superliminal#4-rotation-on-the-object for a comprehensive explanation.
      * Keep in mind the usage of `.clone()` to prevent modifying the original quaternions.
      */
-    const rotationTransformation = this.camera.quaternion
-      .clone()
-      .multiply(this.capturedCameraQuaternion.clone().invert());
-    this.obj.quaternion.copy(
-      rotationTransformation.multiply(this.capturedObjQuaternion)
-    );
+    if (!ignoreQuaternion) {
+      const rotationTransformation = this.camera.quaternion
+        .clone()
+        .multiply(this.capturedCameraQuaternion.clone().invert());
+      this.obj.quaternion.copy(
+        rotationTransformation.multiply(this.capturedObjQuaternion)
+      );
+    }
 
     /**
      * Scale the object by the same amount as the camera has moved since the pivotParent was anchored.
